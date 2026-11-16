@@ -1,88 +1,225 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Одолей вирус</title>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Одолей вирус</title>
 <style>
-:root{--c:#55f7ff;--p:#ff3bd4;--g:#b8ff5c}*{box-sizing:border-box}body{margin:0;background:#050713;color:#eaffff;font:14px system-ui;overflow:hidden}#app{height:100dvh;max-width:1100px;margin:auto;padding:8px;display:flex;flex-direction:column;gap:8px}.hud{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap}.pill,button{background:#09152b;color:#eaffff;border:1px solid #55f7ff99;border-radius:9px;padding:8px 12px}button{cursor:pointer;font-weight:700}button:hover{box-shadow:0 0 15px #55f7ff66}.primary{background:var(--c);color:#03101b}#stage{position:relative;flex:1;min-height:0;border:1px solid #55f7ff88;border-radius:12px;overflow:hidden;box-shadow:0 0 22px #00eaff22}canvas{width:100%;height:100%;display:block}#overlay{position:absolute;inset:0;display:grid;place-items:center;background:#030611d9;text-align:center;padding:16px}.panel{max-width:540px;background:linear-gradient(145deg,#0b1830,#120b29);border:1px solid #55f7ff99;border-radius:18px;padding:clamp(18px,4vw,34px);box-shadow:0 0 30px #00eaff22}h1{font-size:clamp(30px,6vw,52px);line-height:1;margin:4px;color:#dffcff;text-shadow:0 0 12px var(--c)}h2{color:var(--c)}p{line-height:1.5;color:#c4d6ee}.actions{display:flex;justify-content:center;gap:8px;flex-wrap:wrap}.muted{font-size:12px;color:#8faac8}#touch{display:none;position:absolute;bottom:12px;left:12px;right:12px;justify-content:space-between;pointer-events:none}.pad{display:grid;grid-template-columns:repeat(3,40px);gap:4px}.pad button,.fire{pointer-events:auto;touch-action:none;padding:8px}.fire{align-self:end;border-color:var(--p);border-radius:50%;height:60px;width:60px}@media(max-width:700px){#touch{display:flex}.help{display:none}}
-</style></head><body><div id="app"><div class="hud"><span class="pill">🧬 ОДОЛЕЙ ВИРУС</span><span class="pill" id="lev">Уровень 1/4</span><span class="pill" id="life">Жизни: ♥ ♥ ♥</span><span class="pill" id="up">Усиления: 0/3</span><button id="pause">Ⅱ ПАУЗА</button><button id="sound">♫ ЗВУК: ВКЛ</button></div><div id="stage"><canvas id="cv" tabindex="0" aria-label="Игровое поле. Управление WASD, стрельба Q"></canvas><div id="overlay"><div class="panel"><h1>ОДОЛЕЙ<br>ВИРУС</h1><p>Ты — полезная бактерия. Пройди случайные лабиринты, собери усиления и очисти организм от вируса.</p><div class="actions"><button class="primary" id="start">НАЧАТЬ ИГРУ</button><button id="how">КАК ИГРАТЬ</button></div><p class="muted">WASD — движение · Q — выстрел · усиления подбираются касанием</p></div></div><div id="touch"><div class="pad"><span></span><button data-k="w">▲</button><span></span><button data-k="a">◀</button><button data-k="s">▼</button><button data-k="d">▶</button></div><button class="fire" data-k="q">Q<br>ОГОНЬ</button></div></div><div class="muted help">WASD — движение · Q — выстрел · P/Esc — пауза · усиления и выход активируются касанием</div></div>
+:root{--cyan:#55f7ff;--pink:#ff3bd4;--lime:#b8ff5c;--bg:#050713}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;background:var(--bg);color:#e9fbff;font-family:system-ui,-apple-system,Segoe UI,sans-serif;overflow:hidden}
+body{display:grid;place-items:center;background:radial-gradient(ellipse at center,#101a36 0,#050713 72%)}
+#wrap{position:relative;width:min(100vw,1200px);height:min(100vh,760px);min-height:320px;display:flex;flex-direction:column;padding:10px;gap:8px}
+#hud{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;font-size:clamp(11px,1.5vw,14px);letter-spacing:.04em;text-shadow:0 0 10px #55f7ff}
+.pill{border:1px solid #55f7ff88;border-radius:999px;padding:5px 10px;background:#071225cc;box-shadow:0 0 12px #55f7ff22}
+#stage{position:relative;flex:1;min-height:0;border:1px solid #55f7ff77;border-radius:12px;overflow:hidden;box-shadow:0 0 24px #00eaff22,inset 0 0 28px #00eaff0a}
+canvas{width:100%;height:100%;display:block;background:#080d1e}
+#overlay{position:absolute;inset:0;display:grid;place-items:center;background:#030611c9;padding:18px;text-align:center}
+.panel{max-width:560px;width:min(100%,560px);padding:clamp(18px,4vw,34px);border:1px solid #55f7ff9c;border-radius:18px;background:linear-gradient(145deg,#0b1830f5,#120b29f5);box-shadow:0 0 28px #00eaff22,inset 0 0 22px #ff3bd411}
+h1{font-size:clamp(28px,6vw,54px);margin:0 0 6px;color:#dffcff;letter-spacing:.05em;text-shadow:0 0 8px var(--cyan),0 0 25px #00bfff}
+h2{margin:0 0 10px;color:var(--cyan)}p{line-height:1.5;color:#c4d6ee;margin:10px 0 18px}
+.actions{display:flex;justify-content:center;flex-wrap:wrap;gap:10px}
+button{cursor:pointer;color:#efffff;background:#08172c;border:1px solid var(--cyan);border-radius:9px;padding:11px 18px;font:700 13px system-ui;letter-spacing:.06em;box-shadow:0 0 12px #00eaff22;transition:.15s}
+button:hover,button:focus{background:#12304a;box-shadow:0 0 18px #00eaff66;outline:none}
+button.primary{color:#041016;background:var(--cyan);border-color:#d6ffff}
+button.danger{border-color:var(--pink);color:#ffb8f1}
+.small{font-size:12px;color:#8faac8}
+#bottom{display:flex;justify-content:space-between;align-items:center;gap:8px;color:#8faac8;font-size:11px}
+#touch{display:none;position:absolute;bottom:12px;left:12px;right:12px;justify-content:space-between;pointer-events:none}
+.pad{display:grid;grid-template-columns:repeat(3,42px);grid-template-rows:repeat(2,38px);gap:4px;pointer-events:auto}
+.pad button,.fire{padding:0;opacity:.85;touch-action:none}
+.fire{align-self:end;border-color:var(--pink);color:#ff9fe9;pointer-events:auto;width:62px;height:62px;border-radius:50%}
+@media(max-width:700px){#wrap{padding:5px;gap:5px}#touch{display:flex}#bottom .help{display:none}}
+</style>
+</head>
+<body>
+<div id="wrap">
+  <div id="hud">
+    <span class="pill">🧬 ОДОЛЕЙ ВИРУС</span>
+    <span class="pill" id="levelText">Уровень 1 / 4</span>
+    <span class="pill" id="lifeText">Жизни: ♥ ♥ ♥</span>
+    <span class="pill" id="boostText">Усиления: 0 / 3</span>
+    <button id="pauseBtn">Ⅱ ПАУЗА</button>
+    <button id="soundBtn">♫ ЗВУК: ВКЛ</button>
+  </div>
+  <div id="stage">
+    <canvas id="game" aria-label="Игровое поле"></canvas>
+    <div id="overlay">
+      <div class="panel">
+        <h1>ОДОЛЕЙ<br>ВИРУС</h1>
+        <p>Ты — полезная бактерия. Найди усиления, избегай вредных бактерий и очисти организм от вируса.</p>
+        <div class="actions"><button class="primary" id="startBtn">НАЧАТЬ ИГРУ</button><button id="howBtn">КАК ИГРАТЬ</button></div>
+        <p class="small">WASD / ЦФЫВ — движение · Q / Й — выстрел · усиления подбираются касанием</p>
+      </div>
+    </div>
+    <div id="touch">
+      <div class="pad">
+        <span></span><button data-key="w">▲</button><span></span>
+        <button data-key="a">◀</button><button data-key="s">▼</button><button data-key="d">▶</button>
+      </div>
+      <button class="fire" data-key="q">Q<br>ОГОНЬ</button>
+    </div>
+  </div>
+  <div id="bottom"><span>Неоновая лаборатория организма</span><span class="help">WASD — движение · Q — стрелять · P / Esc — пауза</span><span>Без сохранения данных</span></div>
+</div>
 <script>
-(()=>{const c=document.querySelector('#cv'),x=c.getContext('2d'),ov=document.querySelector('#overlay'),$=s=>document.querySelector(s);let W=800,H=500,run=false,pause=false,sound=true,ac=null,mt,lv=1,lives=3,boost=0,power=1,p,maze,walls=[],en=[],shots=[],haz=[],orb,exit,boss,keys={},t=0,last=0,inv=0,msg='',msgT=0,cell=25,cols=17,rows=11,ox=0,oy=0;
-const R=(a,b)=>Math.random()*(b-a)+a,P=a=>a[Math.floor(Math.random()*a.length)],cl=(v,a,b)=>Math.max(a,Math.min(b,v));
-function beep(f=440,d=.1,type='sine',vol=.035){if(!sound)return;try{ac??=new(window.AudioContext||window.webkitAudioContext)();ac.resume();let o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(vol,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d)}catch{}}
-function music(){if(!run||pause||!sound)return;beep([196,247,294,370][Math.floor(t*2)%4],.22,'triangle',.009);mt=setTimeout(music,500)}
-function resize(){let r=c.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);c.width=r.width*d;c.height=r.height*d;x.setTransform(d,0,0,d,0,0);W=r.width;H=r.height;if(maze&&lv<4)layoutMaze(maze,true);if(p)draw()}addEventListener('resize',resize);
-function ui(){$('#lev').textContent='Уровень '+lv+'/4';$('#life').textContent='Жизни: '+('♥ '.repeat(lives)||'—');$('#up').textContent='Усиления: '+boost+'/3'}
-function panel(title,body,buttons){ov.style.display='grid';ov.innerHTML='<div class="panel"><h2>'+title+'</h2><p>'+body+'</p><div class="actions">'+buttons+'</div></div>'}
-function menu(){run=false;pause=false;clearTimeout(mt);ov.style.display='grid';ov.innerHTML='<div class="panel"><h1>ОДОЛЕЙ<br>ВИРУС</h1><p>Пройди случайные лабиринты, собери усиления и победи вируса.</p><div class="actions"><button class="primary" id="start">НАЧАТЬ ИГРУ</button><button id="how">КАК ИГРАТЬ</button></div><p class="muted">WASD — движение · Q — выстрел</p></div>';$('#start').onclick=start;$('#how').onclick=how}
-function how(){panel('КАК ИГРАТЬ','WASD — движение, Q — стрельба в сторону последнего движения. На каждом из трёх лабиринтных уровней коснись усиления и найди выход. Каждый лабиринт генерируется случайно и становится сложнее. В финальной арене уклоняйся от вирусных частиц. Урон наносят касание врагов, вражеские снаряды и опасные зоны.', '<button class="primary" id="back">ПОНЯТНО</button>');$('#back').onclick=menu}
-function start(){lv=1;lives=3;boost=0;power=1;t=0;run=true;pause=false;ov.style.display='none';$('#pause').textContent='Ⅱ ПАУЗА';make();last=performance.now();music();requestAnimationFrame(loop)}
-function layoutMaze(g=maze,remap=true){
- if(!g)return;
- const old={cell,ox,oy};
- const moveToCell=o=>{
-  if(!o||!old.cell)return;
-  const sc=cl(Math.floor((o.x-old.ox)/old.cell),0,cols-1);
-  const sr=cl(Math.floor((o.y-old.oy)/old.cell),0,rows-1);
-  o.x=ox+(sc+.5)*cell;o.y=oy+(sr+.5)*cell;
+(() => {
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+const overlay=document.getElementById('overlay'), levelText=document.getElementById('levelText'),lifeText=document.getElementById('lifeText'),boostText=document.getElementById('boostText');
+const pauseBtn=document.getElementById('pauseBtn'),soundBtn=document.getElementById('soundBtn');
+let W=900,H=560, running=false, paused=false, soundOn=true, audio=null, musicTimer=null, level=1,lives=3,boosts=0, damage=1, player, enemies=[], shots=[], particles=[], pickups=[], walls=[], hazards=[], exit, boss=null, keys={}, last=0, elapsed=0, invuln=0, mazeCols=21,mazeRows=13,cell=32, worldW=672,worldH=416, banner='', bannerTime=0;
+const rand=(a,b)=>Math.random()*(b-a)+a, pick=a=>a[Math.floor(Math.random()*a.length)], clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function audioInit(){if(!audio){audio=new (window.AudioContext||window.webkitAudioContext)();} if(audio.state==='suspended')audio.resume();}
+function tone(freq,dur=.08,type='sine',vol=.04){if(!soundOn)return;try{audioInit();const o=audio.createOscillator(),g=audio.createGain();o.type=type;o.frequency.value=freq;g.gain.setValueAtTime(vol,audio.currentTime);g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+dur);o.connect(g);g.connect(audio.destination);o.start();o.stop(audio.currentTime+dur)}catch(e){}}
+function music(){if(!soundOn||!running||paused)return;const notes=[196,247,294,370,330,247];tone(notes[Math.floor(elapsed*2)%notes.length],.24,'triangle',.012);musicTimer=setTimeout(music,520)}
+function setSound(v){soundOn=v;soundBtn.textContent='♫ ЗВУК: '+(soundOn?'ВКЛ':'ВЫКЛ');if(soundOn&&running&&!paused){clearTimeout(musicTimer);music() }else clearTimeout(musicTimer)}
+function resize(){const r=canvas.getBoundingClientRect();const d=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.max(1,Math.floor(r.width*d));canvas.height=Math.max(1,Math.floor(r.height*d));ctx.setTransform(d,0,0,d,0,0);W=r.width;H=r.height;draw()}
+window.addEventListener('resize',resize);
+function ui(){levelText.textContent=`Уровень ${level} / 4`;lifeText.textContent='Жизни: '+('♥ '.repeat(lives)||'—');boostText.textContent=`Усиления: ${boosts} / 3`; }
+function show(title,body,buttons){overlay.style.display='grid';overlay.innerHTML=`<div class="panel"><h2>${title}</h2><p>${body}</p><div class="actions">${buttons}</div></div>`}
+function start(){audioInit();level=1;lives=3;boosts=0;damage=1;elapsed=0;running=true;paused=false;overlay.style.display='none';pauseBtn.textContent='Ⅱ ПАУЗА';makeLevel();last=performance.now();clearTimeout(musicTimer);music();requestAnimationFrame(loop)}
+function randMaze(){
+ mazeCols=level===1?17:level===2?21:25; mazeRows=level===1?11:level===2?13:15;
+ cell=Math.min((W-22)/mazeCols,(H-22)/mazeRows,36);cell=Math.max(15,cell);worldW=mazeCols*cell;worldH=mazeRows*cell;
+ // Randomized DFS perfect maze, then add a few level-scaled loops.
+ const grid=Array.from({length:mazeRows},()=>Array.from({length:mazeCols},()=>({v:0,w:[1,1,1,1]})));
+ const dirs=[[-1,0,0,2],[0,1,1,3],[1,0,2,0],[0,-1,3,1]];
+ const stack=[[0,0]];grid[0][0].v=1;
+ while(stack.length){const [y,x]=stack[stack.length-1];const opts=dirs.filter(([dy,dx])=>grid[y+dy]?.[x+dx]&&!grid[y+dy][x+dx].v);if(!opts.length){stack.pop();continue}const [dy,dx,di,opp]=pick(opts);grid[y][x].w[di]=0;grid[y+dy][x+dx].w[opp]=0;grid[y+dy][x+dx].v=1;stack.push([y+dy,x+dx])}
+ for(let i=0;i<Math.floor(mazeCols*mazeRows*(.035+level*.008));i++){const y=Math.floor(rand(1,mazeRows-1)),x=Math.floor(rand(1,mazeCols-1));const d=pick(dirs);if(grid[y+d[0]]?.[x+d[1]]){grid[y][x].w[d[2]]=0;grid[y+d[0]][x+d[1]].w[d[3]]=0}}
+ walls=[];hazards=[];
+ // cell wall segments with one shared edge drawn once
+ for(let y=0;y<mazeRows;y++)for(let x=0;x<mazeCols;x++){const c=grid[y][x],px=(W-worldW)/2+x*cell,py=(H-worldH)/2+y*cell;if(c.w[0])walls.push({x:px,y:py,w:cell,h:2});if(c.w[3])walls.push({x:px,y:py,w:2,h:cell});if(x===mazeCols-1&&c.w[1])walls.push({x:px+cell-2,y:py,w:2,h:cell});if(y===mazeRows-1&&c.w[2])walls.push({x:px,y:py+cell-2,w:cell,h:2})}
+ // map center positions and carve spawn / exit region
+ return {grid,ox:(W-worldW)/2,oy:(H-worldH)/2};
+}
+let maze=null;
+function cellCenter(x,y){return {x:maze.ox+(x+.5)*cell,y:maze.oy+(y+.5)*cell}}
+function openCells(){const out=[];if(!maze)return out;for(let y=0;y<mazeRows;y++)for(let x=0;x<mazeCols;x++)out.push(cellCenter(x,y));return out}
+function makeLevel(){
+ shots=[];particles=[];enemies=[];pickups=[];boss=null;hazards=[];
+ if(level<=3){
+ maze=randMaze();const cells=openCells(),start=cellCenter(0,0);player={x:start.x,y:start.y,r:cell*.25,dx:0,dy:1,hp:100,face:{x:1,y:0}};
+ exit={...cellCenter(mazeCols-1,mazeRows-1),r:cell*.35};
+ const safe=p=>Math.hypot(p.x-start.x,p.y-start.y)>cell*3&&Math.hypot(p.x-exit.x,p.y-exit.y)>cell*2;
+ const available=cells.filter(safe);
+ for(let i=0;i<5;i++){const p=pick(available);enemies.push({x:p.x,y:p.y,r:cell*.22,hp:1+Math.floor((level-1)/2),speed:rand(25,40)+level*5,dx:rand(-1,1),dy:rand(-1,1),turn:rand(.5,2),kind:'bacteria'})}
+ const p=pick(available);pickups.push({x:p.x,y:p.y,r:cell*.23,got:false});
+ // Environmental hazards add the third damage source; avoid spawn/exit.
+ for(let i=0;i<level+1;i++){const h=pick(available);hazards.push({x:h.x,y:h.y,r:cell*.19,phase:rand(0,6)})}
+ } else {
+ maze=null;walls=[];const pad=34;player={x:W*.22,y:H*.55,r:15,dx:0,dy:1,hp:100,face:{x:1,y:0}};exit=null;
+ boss={x:W*.72,y:H*.5,r:30,hp:22,maxHp:22,shoot:1.2,move:0};
+ for(let i=0;i<4;i++)hazards.push({x:rand(W*.35,W*.85),y:rand(H*.2,H*.8),r:8,phase:rand(0,6)});
+ }
+ ui();banner=level<=3?`УРОВЕНЬ ${level}: НАЙДИ УСИЛЕНИЕ`:'ФИНАЛ: ОДОЛЕЙ ВИРУС';bannerTime=2.5;
+}
+function circleRect(cx,cy,r,rect){const x=clamp(cx,rect.x,rect.x+rect.w),y=clamp(cy,rect.y,rect.y+rect.h);return (cx-x)**2+(cy-y)**2<r*r}
+function blocked(x,y,r){if(x<r||y<r||x>W-r||y>H-r)return true;return walls.some(w=>circleRect(x,y,r,w))}
+function moveEntity(e,dx,dy){if(!blocked(e.x+dx,e.y,e.r))e.x+=dx;if(!blocked(e.x,e.y+dy,e.r))e.y+=dy}
+// В лабиринте каждое нажатие перемещает игрока ровно в центр соседней клетки.
+function stepPlayer(dir){
+ if(!running||paused||!player||level>3||!maze)return;
+ const dirs={w:[0,-1],a:[-1,0],s:[0,1],d:[1,0]};
+ const v=dirs[dir];if(!v)return;
+ player.face={x:v[0],y:v[1]};
+ const nx=player.x+v[0]*cell,ny=player.y+v[1]*cell;
+ if(!blocked(nx,ny,player.r)){player.x=maze.ox+(Math.round((nx-maze.ox)/cell-.5)+.5)*cell;player.y=maze.oy+(Math.round((ny-maze.oy)/cell-.5)+.5)*cell;}
+}
+
+function shoot(){if(!running||paused||!player)return;tone(620,.08,'sawtooth',.035);shots.push({x:player.x+player.face.x*(player.r+4),y:player.y+player.face.y*(player.r+4),vx:player.face.x*330,vy:player.face.y*330,r:4,life:1.5,from:'player'})}
+function damagePlayer(){if(invuln>0)return;lives--;invuln=1.25;tone(110,.25,'sawtooth',.07);for(let i=0;i<10;i++)particles.push({x:player.x,y:player.y,vx:rand(-80,80),vy:rand(-80,80),life:.5,color:'#ff3bd4'});ui();if(lives<=0){running=false;clearTimeout(musicTimer);show('МИССИЯ ПРОВАЛЕНА','Вирус оказался сильнее. Попробуй снова — лабиринт будет новым.',`<button class="primary" id="again">ПОВТОРИТЬ</button><button class="danger" id="leave">ВЫЙТИ</button>`);document.getElementById('again').onclick=start;document.getElementById('leave').onclick=menu}}
+function nextLevel(){level++;if(level===4){makeLevel();return}makeLevel()}
+function win(){running=false;clearTimeout(musicTimer);show('ОРГАНИЗМ ОЧИЩЕН!','Вирус побеждён, его частицы исчезают, а тело снова наполняется светом. Отличная работа!',`<button class="primary" id="again">ИГРАТЬ ЕЩЁ</button><button id="leave">В МЕНЮ</button>`);document.getElementById('again').onclick=start;document.getElementById('leave').onclick=menu}
+function update(dt){
+ elapsed+=dt;if(invuln>0)invuln-=dt;if(bannerTime>0)bannerTime-=dt;
+ const speed=210;let dx=(keys.d?1:0)-(keys.a?1:0),dy=(keys.s?1:0)-(keys.w?1:0);if(level===4&&(dx||dy)){const n=Math.hypot(dx,dy);dx/=n;dy/=n;player.face={x:dx,y:dy};moveEntity(player,dx*speed*dt,dy*speed*dt)}
+ if(level<=3){
+ for(const e of enemies){e.turn-=dt;if(e.turn<=0){e.dx=rand(-1,1);e.dy=rand(-1,1);e.turn=rand(.35,1.6)}const n=Math.hypot(e.dx,e.dy)||1;moveEntity(e,e.dx/n*e.speed*dt,e.dy/n*e.speed*dt);if(Math.hypot(e.x-player.x,e.y-player.y)<e.r+player.r)damagePlayer()}
+ for(const h of hazards){h.phase+=dt;if(Math.sin(h.phase)>0.92&&Math.hypot(h.x-player.x,h.y-player.y)<h.r+player.r)damagePlayer()}
+ for(const p of pickups)if(!p.got&&Math.hypot(p.x-player.x,p.y-player.y)<p.r+player.r){p.got=true;boosts=Math.min(3,boosts+1);damage++;tone(820,.16,'sine',.06);banner='УСИЛЕНИЕ ПОЛУЧЕНО!';bannerTime=1.6;ui()}
+ if(exit&&Math.hypot(exit.x-player.x,exit.y-player.y)<exit.r+player.r){if(!pickups.some(p=>!p.got)){tone(440,.1);nextLevel()}else{banner='СНАЧАЛА НАЙДИ УСИЛЕНИЕ';bannerTime=1}}
+ }else if(boss){
+ boss.move+=dt;boss.x=clamp(boss.x+Math.cos(boss.move*.9)*35*dt,W*.42,W-40);boss.y=clamp(boss.y+Math.sin(boss.move*1.3)*55*dt,45,H-45);
+ boss.shoot-=dt;if(boss.shoot<=0){boss.shoot=rand(.65,1.1);const n=Math.random()<.5?1:5;for(let i=0;i<n;i++){let a=n===1?Math.atan2(player.y-boss.y,player.x-boss.x):rand(0,Math.PI*2);let sp=rand(90,150);shots.push({x:boss.x,y:boss.y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,r:7,life:4.5,bounce:true,from:'boss'})}}
+ if(Math.hypot(boss.x-player.x,boss.y-player.y)<boss.r+player.r)damagePlayer();
+ for(const h of hazards){h.phase+=dt;h.x+=Math.sin(h.phase)*12*dt;if(Math.hypot(h.x-player.x,h.y-player.y)<h.r+player.r)damagePlayer()}
+ }
+ for(let i=shots.length-1;i>=0;i--){const s=shots[i];s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;if(s.bounce){if(s.x<s.r||s.x>W-s.r)s.vx*=-1;if(s.y<s.r||s.y>H-s.r)s.vy*=-1;if(Math.hypot(s.x-player.x,s.y-player.y)<s.r+player.r){shots.splice(i,1);damagePlayer();continue}}else{let hit=false;for(let j=enemies.length-1;j>=0;j--){const e=enemies[j];if(Math.hypot(s.x-e.x,s.y-e.y)<s.r+e.r){e.hp-=damage;hit=true;if(e.hp<=0){for(let k=0;k<5;k++)particles.push({x:e.x,y:e.y,vx:rand(-50,50),vy:rand(-50,50),life:.5,color:'#ff3bd4'});enemies.splice(j,1)}break}}
+ if(boss&&Math.hypot(s.x-boss.x,s.y-boss.y)<s.r+boss.r){boss.hp-=damage;hit=true;tone(180,.04,'square',.03);if(boss.hp<=0){boss=null;shots=shots.filter(z=>z.from!=='boss');particles=[];win();return}}
+ if(hit||blocked(s.x,s.y,s.r)||s.life<=0||s.x<0||s.y<0||s.x>W||s.y>H)shots.splice(i,1);continue}
+ if(s.life<=0)shots.splice(i,1)}
+ for(let i=particles.length-1;i>=0;i--){const p=particles[i];p.x+=p.vx*dt;p.y+=p.vy*dt;p.life-=dt;if(p.life<=0)particles.splice(i,1)}
+}
+function draw(){
+ if(!ctx||!W||!H)return;ctx.clearRect(0,0,W,H);
+ const grad=ctx.createRadialGradient(W*.5,H*.5,5,W*.5,H*.5,Math.max(W,H)*.7);grad.addColorStop(0,level===4?'#173f43':'#111b38');grad.addColorStop(1,'#050713');ctx.fillStyle=grad;ctx.fillRect(0,0,W,H);
+ ctx.save();ctx.globalAlpha=.18;ctx.strokeStyle='#4bf5ff';ctx.lineWidth=.5;
+ if(level<=3&&maze){
+  for(let gx=0;gx<=mazeCols;gx++){const px=maze.ox+gx*cell;ctx.beginPath();ctx.moveTo(px,maze.oy);ctx.lineTo(px,maze.oy+worldH);ctx.stroke()}
+  for(let gy=0;gy<=mazeRows;gy++){const py=maze.oy+gy*cell;ctx.beginPath();ctx.moveTo(maze.ox,py);ctx.lineTo(maze.ox+worldW,py);ctx.stroke()}
+ }else{
+  for(let gx=0;gx<W;gx+=24){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,H);ctx.stroke()}
+  for(let gy=0;gy<H;gy+=24){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke()}
+ }
+ ctx.restore();
+ if(level<=3&&maze){for(const w of walls){ctx.save();ctx.shadowBlur=7;ctx.shadowColor='#34dfff';ctx.fillStyle='#49dfff';ctx.fillRect(w.x,w.y,w.w,w.h);ctx.restore()}
+ if(exit){ctx.save();ctx.shadowBlur=18;ctx.shadowColor='#b8ff5c';ctx.strokeStyle='#b8ff5c';ctx.lineWidth=2;ctx.beginPath();ctx.arc(exit.x,exit.y,exit.r+Math.sin(elapsed*5)*3,0,Math.PI*2);ctx.stroke();ctx.fillStyle='#b8ff5c';ctx.font='10px system-ui';ctx.textAlign='center';ctx.fillText('ВЫХОД',exit.x,exit.y-exit.r-7);ctx.restore()}
+ for(const p of pickups)if(!p.got){ctx.save();ctx.translate(p.x,p.y);ctx.rotate(elapsed*1.8);ctx.shadowBlur=18;ctx.shadowColor='#b8ff5c';ctx.strokeStyle='#b8ff5c';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(0,-p.r);ctx.lineTo(p.r,0);ctx.lineTo(0,p.r);ctx.lineTo(-p.r,0);ctx.closePath();ctx.stroke();ctx.restore()}
+ for(const h of hazards){ctx.save();ctx.shadowBlur=12;ctx.shadowColor='#ff9b3b';ctx.fillStyle=Math.sin(h.phase)>0.92?'#ff3b6b':'#a45b4a';ctx.beginPath();ctx.arc(h.x,h.y,h.r,0,Math.PI*2);ctx.fill();ctx.restore()}
+ for(const e of enemies){ctx.save();ctx.shadowBlur=14;ctx.shadowColor='#ff3bd4';ctx.fillStyle='#ff3bd4';ctx.beginPath();ctx.arc(e.x,e.y,e.r,0,Math.PI*2);ctx.fill();ctx.fillStyle='#250b2b';ctx.beginPath();ctx.arc(e.x-e.r*.3,e.y-e.r*.15,2,0,Math.PI*2);ctx.arc(e.x+e.r*.3,e.y-e.r*.15,2,0,Math.PI*2);ctx.fill();ctx.restore()}
+ }else if(level===4){ctx.save();ctx.globalAlpha=.18;ctx.fillStyle='#a8ffba';ctx.fillRect(0,0,W,H);ctx.restore();for(const h of hazards){ctx.fillStyle='#ff9c3b';ctx.shadowBlur=12;ctx.shadowColor='#ff9c3b';ctx.beginPath();ctx.arc(h.x,h.y,h.r,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0}
+ if(boss){ctx.save();ctx.shadowBlur=24;ctx.shadowColor='#ff3b72';ctx.fillStyle='#b51e54';ctx.beginPath();ctx.arc(boss.x,boss.y,boss.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#ff9ebc';ctx.lineWidth=3;ctx.stroke();ctx.fillStyle='#ffedfa';for(let i=0;i<8;i++){const a=i*Math.PI/4+elapsed*.5;ctx.beginPath();ctx.arc(boss.x+Math.cos(a)*boss.r*.65,boss.y+Math.sin(a)*boss.r*.65,4,0,Math.PI*2);ctx.fill()}ctx.restore();ctx.fillStyle='#381021';ctx.fillRect(W*.3,18,W*.4,10);ctx.fillStyle='#ff3b72';ctx.fillRect(W*.3,18,W*.4*clamp(boss.hp/boss.maxHp,0,1),10);ctx.strokeStyle='#ff8eae';ctx.strokeRect(W*.3,18,W*.4,10);ctx.fillStyle='#ffd6e3';ctx.font='11px system-ui';ctx.textAlign='center';ctx.fillText('ВИРУС',W*.5,14)}
+ }
+ for(const s of shots){ctx.save();ctx.shadowBlur=12;ctx.shadowColor=s.from==='boss'?'#ff3b72':'#55f7ff';ctx.fillStyle=s.from==='boss'?'#ff3b72':'#b8ffff';ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();ctx.restore()}
+ for(const p of particles){ctx.globalAlpha=clamp(p.life*2,0,1);ctx.fillStyle=p.color;ctx.fillRect(p.x,p.y,3,3);ctx.globalAlpha=1}
+ if(player){ctx.save();ctx.translate(player.x,player.y);ctx.shadowBlur=invuln>0?4+Math.random()*20:18;ctx.shadowColor='#55f7ff';ctx.fillStyle=invuln>0?'#ffffff':'#55f7ff';ctx.beginPath();ctx.arc(0,0,player.r,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#e6ffff';ctx.lineWidth=2;ctx.stroke();ctx.fillStyle='#06222a';ctx.beginPath();ctx.arc(player.face.x*player.r*.32,player.face.y*player.r*.32,player.r*.28,0,Math.PI*2);ctx.fill();ctx.restore()}
+ if(bannerTime>0&&banner){ctx.save();ctx.font='bold 15px system-ui';ctx.textAlign='center';ctx.shadowBlur=12;ctx.shadowColor='#55f7ff';ctx.fillStyle='#dfffff';ctx.fillText(banner,W/2,H*.12);ctx.restore()}
+}
+function loop(t){if(!running)return;const dt=Math.min((t-last)/1000,.04);last=t;if(!paused){update(dt);draw()}requestAnimationFrame(loop)}
+function menu(){running=false;paused=false;clearTimeout(musicTimer);overlay.style.display='grid';overlay.innerHTML=`<div class="panel"><h1>ОДОЛЕЙ<br>ВИРУС</h1><p>Ты — полезная бактерия. Собери усиления, пройди случайные лабиринты и победи вирус.</p><div class="actions"><button class="primary" id="startBtn">НАЧАТЬ ИГРУ</button><button id="howBtn">КАК ИГРАТЬ</button></div><p class="small">WASD / ЦФЫВ — движение · Q / Й — выстрел · усиления подбираются касанием</p></div>`;document.getElementById('startBtn').onclick=start;document.getElementById('howBtn').onclick=how;draw()}
+function how(){show('КАК ИГРАТЬ','Двигайся на WASD или экранными кнопками. Клавиша Q стреляет в направлении движения. На каждом из трёх случайно генерируемых лабиринтов коснись усиления и найди выход. Лабиринты становятся сложнее. В четвёртом уровне уклоняйся от вирусных частиц и стреляй по боссу. Урон наносят касание врага, вражеские снаряды и активные опасные зоны. У тебя три жизни.',`<button class="primary" id="back">ПОНЯТНО</button>`);document.getElementById('back').onclick=menu}
+function togglePause(){if(!running)return;paused=!paused;pauseBtn.textContent=paused?'▶ ПРОДОЛЖИТЬ':'Ⅱ ПАУЗА';if(paused){clearTimeout(musicTimer);show('ПАУЗА','Игра приостановлена. Ты можешь продолжить или вернуться в меню.',`<button class="primary" id="resume">ПРОДОЛЖИТЬ</button><button id="toMenu">В МЕНЮ</button>`);document.getElementById('resume').onclick=()=>{overlay.style.display='none';paused=false;pauseBtn.textContent='Ⅱ ПАУЗА';last=performance.now();music()};document.getElementById('toMenu').onclick=()=>confirmExit()}else{overlay.style.display='none';last=performance.now();music()}}
+function confirmExit(){show('ВЕРНУТЬСЯ В МЕНЮ?','Текущий прогресс будет потерян. Ты уверен, что хочешь выйти?',`<button class="primary" id="yes">ДА, ВЫЙТИ</button><button id="no">ОСТАТЬСЯ</button>`);document.getElementById('yes').onclick=menu;document.getElementById('no').onclick=()=>{paused=true;pauseBtn.textContent='▶ ПРОДОЛЖИТЬ'}}
+document.getElementById('startBtn').onclick=start;document.getElementById('howBtn').onclick=how;pauseBtn.onclick=togglePause;soundBtn.onclick=()=>setSound(!soundOn);
+// Универсальное управление: английская и русская раскладки, стрелки и физические клавиши.
+function gameKey(e){
+ const key=String(e.key||'').toLowerCase();
+ const byCode={
+  KeyW:'w',KeyA:'a',KeyS:'s',KeyD:'d',KeyQ:'q',
+  ArrowUp:'w',ArrowLeft:'a',ArrowDown:'s',ArrowRight:'d',
+  Escape:'escape',KeyP:'p'
  };
- // Единый масштаб 1:1: шаг игрока = клетка фона = ширина прохода.
- cell=Math.max(1,Math.floor(Math.min((W-24)/cols,(H-24)/rows,34)));
- ox=Math.floor((W-cols*cell)/2);oy=Math.floor((H-rows*cell)/2);
- if(remap){moveToCell(p);moveToCell(exit);moveToCell(orb);for(const e of en)moveToCell(e);for(const h of haz)moveToCell(h)}
- walls=[];
- const tile=cell;
- for(let y=0;y<rows;y++)for(let a=0;a<cols;a++){
-  const q=g[y][a],xx=ox+a*tile,yy=oy+y*tile;
-  if(q.w[0])walls.push({x:xx,y:yy,w:tile,h:2});
-  if(q.w[3])walls.push({x:xx,y:yy,w:2,h:tile});
-  if(a===cols-1&&q.w[1])walls.push({x:xx+tile-2,y:yy,w:2,h:tile});
-  if(y===rows-1&&q.w[2])walls.push({x:xx,y:yy+tile-2,w:tile,h:2});
+ const byKey={
+  w:'w',a:'a',s:'s',d:'d',q:'q',
+  ц:'w',ф:'a',ы:'s',в:'d',й:'q',
+  arrowup:'w',arrowleft:'a',arrowdown:'s',arrowright:'d',
+  escape:'escape'
+ };
+ const byKeyCode={87:'w',65:'a',83:'s',68:'d',81:'q',38:'w',37:'a',40:'s',39:'d',27:'escape',80:'p'};
+ return byCode[e.code]||byKey[key]||byKeyCode[e.keyCode]||'';
+}
+function gameKeyDown(e){
+ const k=gameKey(e);
+ if(!k)return;
+ e.preventDefault();
+ if(['w','a','s','d'].includes(k)){
+  if(level<=3)stepPlayer(k);
+  else keys[k]=true;
+  return;
  }
+ if(k==='q'&&!keys.q)shoot();
+ if(k==='q')keys.q=true;
+ if((k==='p'||k==='escape')&&!e.repeat)togglePause();
 }
-function mazeGen(){
- cols=lv===1?17:lv===2?21:25;rows=lv===1?11:lv===2?13:15;
- let g=Array.from({length:rows},()=>Array.from({length:cols},()=>({v:0,w:[1,1,1,1]}))),ds=[[-1,0,0,2],[0,1,1,3],[1,0,2,0],[0,-1,3,1]],st=[[0,0]];
- g[0][0].v=1;
- while(st.length){
-  let [y,a]=st[st.length-1],opts=ds.filter(([dy,dx])=>g[y+dy]?.[a+dx]&&!g[y+dy][a+dx].v);
-  if(!opts.length){st.pop();continue}
-  let[dy,dx,d,o]=P(opts);g[y][a].w[d]=0;g[y+dy][a+dx].w[o]=0;g[y+dy][a+dx].v=1;st.push([y+dy,a+dx]);
- }
- for(let i=0;i<cols*rows*(.04+lv*.008);i++){
-  let y=1+Math.floor(R(0,rows-2)),a=1+Math.floor(R(0,cols-2)),[dy,dx,d,o]=P(ds);
-  if(g[y+dy]?.[a+dx]){g[y][a].w[d]=0;g[y+dy][a+dx].w[o]=0}
- }
- layoutMaze(g,false);return g;
+function gameKeyUp(e){
+ const k=gameKey(e);
+ if(k)keys[k]=false;
 }
-function center(a,b){return{x:ox+(a+.5)*cell,y:oy+(b+.5)*cell}}function cells(){return Array.from({length:cols*rows},(_,i)=>center(i%cols,Math.floor(i/cols)))}
-function make(){en=[];shots=[];haz=[];boss=null;orb=null;if(lv<4){maze=mazeGen();p={...center(0,0),r:cell*.22,face:{x:1,y:0}};exit={...center(cols-1,rows-1),r:cell*.35};let avail=cells().filter(q=>Math.hypot(q.x-p.x,q.y-p.y)>cell*3&&Math.hypot(q.x-exit.x,q.y-exit.y)>cell*2);for(let i=0;i<5;i++){let q=P(avail);en.push({...q,r:cell*.22,hp:1+Math.floor((lv-1)/2),speed:R(24,43)+lv*5,dx:R(-1,1),dy:R(-1,1),turn:R(.3,1.5)})}let q=P(avail);orb={...q,r:cell*.23};for(let i=0;i<lv+1;i++){q=P(avail);haz.push({...q,r:cell*.18,phase:R(0,6)})}}else{maze=null;walls=[];p={x:W*.22,y:H*.55,r:14,face:{x:1,y:0}};exit=null;boss={x:W*.72,y:H*.5,r:30,hp:22,max:22,shoot:1,phase:0};for(let i=0;i<4;i++)haz.push({x:R(W*.35,W*.85),y:R(H*.2,H*.8),r:8,phase:R(0,6)})}ui();msg=lv===4?'ФИНАЛ: ОДОЛЕЙ ВИРУС':'УРОВЕНЬ '+lv+': НАЙДИ УСИЛЕНИЕ';msgT=2.5}
-function cr(cx,cy,r,a){let xx=cl(cx,a.x,a.x+a.w),yy=cl(cy,a.y,a.y+a.h);return (cx-xx)**2+(cy-yy)**2<r*r}
-function block(a,b,r){
- if(lv<4&&maze){
-  const right=ox+cols*cell,bottom=oy+rows*cell,eps=.25;
-  if(a-r<ox+eps||b-r<oy+eps||a+r>right-eps||b+r>bottom-eps)return true;
- }else if(a<r||b<r||a>W-r||b>H-r)return true;
- return walls.some(q=>cr(a,b,r,q))
-}
-function move(e,dx,dy){if(!block(e.x+dx,e.y,e.r))e.x+=dx;if(!block(e.x,e.y+dy,e.r))e.y+=dy}
-function stepPlayer(k){
- if(!run||pause||!p||lv>=4||!maze)return;
- const dirs={w:[-1,0],d:[0,1],s:[1,0],a:[0,-1]},v=dirs[k];if(!v)return;
- const [dr,dc]=v;
- const col=Math.floor((p.x-ox)/cell),row=Math.floor((p.y-oy)/cell);
- const nc=col+dc,nr=row+dr;
- if(col<0||col>=cols||row<0||row>=rows||nc<0||nc>=cols||nr<0||nr>=rows)return;
- const wall=dr<0?0:dc>0?1:dr>0?2:3;
- if(maze[row][col].w[wall]!==0)return;
- p.face={x:dc,y:dr};
- p.x=ox+(nc+.5)*cell;p.y=oy+(nr+.5)*cell;
-}
-function fire(){if(!run||pause)return;beep(620,.07,'sawtooth');shots.push({x:p.x+p.face.x*(p.r+4),y:p.y+p.face.y*(p.r+4),vx:p.face.x*330,vy:p.face.y*330,r:4,life:1.5,from:'p'})}
-function hurt(){if(inv>0)return;lives--;inv=1.25;beep(100,.22,'sawtooth',.06);ui();if(lives<=0){run=false;clearTimeout(mt);panel('МИССИЯ ПРОВАЛЕНА','Вирус оказался сильнее. Лабиринт будет новым.', '<button class="primary" id="again">ПОВТОРИТЬ</button><button id="leave">ВЫЙТИ</button>');$('#again').onclick=start;$('#leave').onclick=menu}}
-function next(){lv++;make()}function win(){run=false;clearTimeout(mt);panel('ОРГАНИЗМ ОЧИЩЕН!','Вирус побеждён, его частицы исчезают, а тело снова наполняется светом!', '<button class="primary" id="again">ИГРАТЬ ЕЩЁ</button><button id="leave">В МЕНЮ</button>');$('#again').onclick=start;$('#leave').onclick=menu}
-function update(dt){t+=dt;inv-=dt;msgT-=dt;let dx=(keys.d?1:0)-(keys.a?1:0),dy=(keys.s?1:0)-(keys.w?1:0);if(lv===4&&(dx||dy)){let n=Math.hypot(dx,dy);dx/=n;dy/=n;p.face={x:dx,y:dy};move(p,dx*205*dt,dy*205*dt)}if(lv<4){for(let e of en){e.turn-=dt;if(e.turn<=0){e.dx=R(-1,1);e.dy=R(-1,1);e.turn=R(.3,1.4)}let n=Math.hypot(e.dx,e.dy)||1;move(e,e.dx/n*e.speed*dt,e.dy/n*e.speed*dt);if(Math.hypot(e.x-p.x,e.y-p.y)<e.r+p.r)hurt()}for(let h of haz){h.phase+=dt;if(Math.sin(h.phase)>0.92&&Math.hypot(h.x-p.x,h.y-p.y)<h.r+p.r)hurt()}if(orb&&Math.hypot(orb.x-p.x,orb.y-p.y)<orb.r+p.r){orb=null;boost=Math.min(3,boost+1);power++;beep(820,.15);msg='УСИЛЕНИЕ ПОЛУЧЕНО!';msgT=1.5;ui()}if(Math.hypot(exit.x-p.x,exit.y-p.y)<exit.r+p.r){if(!orb)next();else{msg='СНАЧАЛА НАЙДИ УСИЛЕНИЕ';msgT=1}}}else if(boss){boss.phase+=dt;boss.x=cl(boss.x+Math.cos(boss.phase)*25*dt,W*.42,W-40);boss.y=cl(boss.y+Math.sin(boss.phase*1.3)*45*dt,45,H-45);boss.shoot-=dt;if(boss.shoot<=0){boss.shoot=R(.65,1.1);let n=Math.random()<.5?1:5;for(let i=0;i<n;i++){let a=n===1?Math.atan2(p.y-boss.y,p.x-boss.x):R(0,Math.PI*2),s=R(90,150);shots.push({x:boss.x,y:boss.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,r:7,life:4.5,from:'b'})}}if(Math.hypot(boss.x-p.x,boss.y-p.y)<boss.r+p.r)hurt();for(let h of haz){h.phase+=dt;h.x+=Math.sin(h.phase)*12*dt;if(Math.hypot(h.x-p.x,h.y-p.y)<h.r+p.r)hurt()}}
-for(let i=shots.length-1;i>=0;i--){let s=shots[i];s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;if(s.from==='b'){if(s.x<s.r||s.x>W-s.r)s.vx*=-1;if(s.y<s.r||s.y>H-s.r)s.vy*=-1;if(Math.hypot(s.x-p.x,s.y-p.y)<s.r+p.r){shots.splice(i,1);hurt();continue}}else{let hit=false;for(let j=en.length-1;j>=0;j--){let e=en[j];if(Math.hypot(s.x-e.x,s.y-e.y)<s.r+e.r){e.hp-=power;hit=true;if(e.hp<=0)en.splice(j,1);break}}if(boss&&Math.hypot(s.x-boss.x,s.y-boss.y)<s.r+boss.r){boss.hp-=power;hit=true;if(boss.hp<=0){boss=null;shots=shots.filter(z=>z.from!=='b');win();return}}if(hit||block(s.x,s.y,s.r)||s.life<=0||s.x<0||s.y<0||s.x>W||s.y>H)shots.splice(i,1);continue}if(s.life<=0)shots.splice(i,1)}}
-function draw(){x.clearRect(0,0,W,H);let g=x.createRadialGradient(W/2,H/2,2,W/2,H/2,Math.max(W,H)*.7);g.addColorStop(0,lv===4?'#173d42':'#111b38');g.addColorStop(1,'#050713');x.fillStyle=g;x.fillRect(0,0,W,H);x.save();x.globalAlpha=.15;x.strokeStyle='#55f7ff';if(lv<4&&maze){const unit=cell;for(let a=0;a<=cols;a++){let gx=ox+a*unit;x.beginPath();x.moveTo(gx,oy);x.lineTo(gx,oy+rows*cell);x.stroke()}for(let b=0;b<=rows;b++){let gy=oy+b*unit;x.beginPath();x.moveTo(ox,gy);x.lineTo(ox+cols*cell,gy);x.stroke()}}else{for(let a=0;a<W;a+=24){x.beginPath();x.moveTo(a,0);x.lineTo(a,H);x.stroke()}for(let b=0;b<H;b+=24){x.beginPath();x.moveTo(0,b);x.lineTo(W,b);x.stroke()}}x.restore();if(lv<4){x.shadowBlur=8;x.shadowColor='#55f7ff';x.fillStyle='#49dfff';for(let q of walls)x.fillRect(q.x,q.y,q.w,q.h);x.shadowBlur=18;x.strokeStyle='#b8ff5c';x.lineWidth=2;x.beginPath();x.arc(exit.x,exit.y,exit.r+Math.sin(t*5)*3,0,7);x.stroke();if(orb){x.save();x.translate(orb.x,orb.y);x.rotate(t*2);x.strokeStyle='#b8ff5c';x.beginPath();x.moveTo(0,-orb.r);x.lineTo(orb.r,0);x.lineTo(0,orb.r);x.lineTo(-orb.r,0);x.closePath();x.stroke();x.restore()}for(let h of haz){x.fillStyle=Math.sin(h.phase)>0.92?'#ff3b6b':'#a45b4a';x.beginPath();x.arc(h.x,h.y,h.r,0,7);x.fill()}for(let e of en){x.fillStyle='#ff3bd4';x.shadowColor='#ff3bd4';x.shadowBlur=13;x.beginPath();x.arc(e.x,e.y,e.r,0,7);x.fill()}}else{for(let h of haz){x.fillStyle='#ff9c3b';x.beginPath();x.arc(h.x,h.y,h.r,0,7);x.fill()}if(boss){x.fillStyle='#b51e54';x.shadowColor='#ff3b72';x.shadowBlur=24;x.beginPath();x.arc(boss.x,boss.y,boss.r,0,7);x.fill();x.shadowBlur=0;x.fillStyle='#381021';x.fillRect(W*.3,18,W*.4,10);x.fillStyle='#ff3b72';x.fillRect(W*.3,18,W*.4*cl(boss.hp/boss.max,0,1),10);x.fillStyle='#fff';x.textAlign='center';x.fillText('ВИРУС',W/2,14)}}for(let s of shots){x.fillStyle=s.from==='b'?'#ff3b72':'#dfffff';x.shadowColor=s.from==='b'?'#ff3b72':'#55f7ff';x.shadowBlur=12;x.beginPath();x.arc(s.x,s.y,s.r,0,7);x.fill()}x.shadowBlur=inv>0?20:16;x.shadowColor='#55f7ff';x.fillStyle=inv>0?'white':'#55f7ff';x.beginPath();x.arc(p.x,p.y,p.r,0,7);x.fill();x.shadowBlur=0;x.fillStyle='#05222a';x.beginPath();x.arc(p.x+p.face.x*p.r*.3,p.y+p.face.y*p.r*.3,p.r*.25,0,7);x.fill();if(msgT>0){x.fillStyle='#eaffff';x.font='bold 15px system-ui';x.textAlign='center';x.shadowColor='#55f7ff';x.shadowBlur=10;x.fillText(msg,W/2,H*.12)}x.shadowBlur=0}
-function loop(now){if(!run)return;let dt=Math.min((now-last)/1000,.04);last=now;if(!pause){update(dt);draw()}requestAnimationFrame(loop)}
-function exitConfirm(){panel('ВЕРНУТЬСЯ В МЕНЮ?','Текущий прогресс будет потерян. Ты уверен?', '<button class="primary" id="yes">ДА, ВЫЙТИ</button><button id="no">ОСТАТЬСЯ</button>');$('#yes').onclick=menu;$('#no').onclick=()=>{pause=true;$('#pause').textContent='▶ ПРОДОЛЖИТЬ'}}
-function toggle(){if(!run)return;pause=!pause;$('#pause').textContent=pause?'▶ ПРОДОЛЖИТЬ':'Ⅱ ПАУЗА';if(pause){clearTimeout(mt);panel('ПАУЗА','Игра приостановлена.', '<button class="primary" id="resume">ПРОДОЛЖИТЬ</button><button id="exit">В МЕНЮ</button>');$('#resume').onclick=()=>{pause=false;ov.style.display='none';last=performance.now();music()};$('#exit').onclick=exitConfirm}else{ov.style.display='none';last=performance.now();music()}}
-$('#start').onclick=start;$('#how').onclick=how;$('#pause').onclick=toggle;$('#sound').onclick=()=>{sound=!sound;$('#sound').textContent='♫ ЗВУК: '+(sound?'ВКЛ':'ВЫКЛ');clearTimeout(mt);if(sound)music()};function keyName(e){const code={KeyW:'w',KeyA:'a',KeyS:'s',KeyD:'d',KeyQ:'q',ArrowUp:'w',ArrowLeft:'a',ArrowDown:'s',ArrowRight:'d',Escape:'escape',KeyP:'p'};const chars={'w':'w','a':'a','s':'s','d':'d','q':'q','ц':'w','ф':'a','ы':'s','в':'d','й':'q','arrowup':'w','arrowleft':'a','arrowdown':'s','arrowright':'d','escape':'escape'};const k=String(e.key||'').toLowerCase();const cp=k.length===1?k.codePointAt(0):0;const unicode={1094:'w',1092:'a',1099:'s',1074:'d',1081:'q'};return code[e.code]||chars[k]||unicode[cp]||''}function keyDown(e){const k=keyName(e);if(!k)return;if('wasdq'.includes(k)||k==='escape'||k==='p')e.preventDefault();if(['w','a','s','d'].includes(k)&&lv<4){if(!e.repeat)stepPlayer(k);return}if(!keys[k]&&k==='q')fire();keys[k]=true;if((k==='p'||k==='escape')&&!e.repeat)toggle()}function keyUp(e){const k=keyName(e);if(k)keys[k]=false}document.addEventListener('keydown',keyDown,true);document.addEventListener('keyup',keyUp,true);window.addEventListener('blur',()=>{keys={}});document.querySelectorAll('[data-k]').forEach(b=>{let k=b.dataset.k,off=e=>{e.preventDefault();keys[k]=false};b.onpointerdown=e=>{e.preventDefault();if(['w','a','s','d'].includes(k)&&lv<4)stepPlayer(k);else{keys[k]=true;if(k==='q')fire()}};['pointerup','pointerleave','pointercancel'].forEach(n=>b.addEventListener(n,off))});resize();if(p)draw()})();
-</script></body></html>
+document.addEventListener('keydown',gameKeyDown,true);
+document.addEventListener('keyup',gameKeyUp,true);
+window.addEventListener('blur',()=>{keys={}});
+document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key;const on=e=>{e.preventDefault();if(['w','a','s','d'].includes(k)){if(level<=3)stepPlayer(k);else keys[k]=true}else if(k==='q')shoot()};const off=e=>{e.preventDefault();keys[k]=false};b.addEventListener('pointerdown',on);b.addEventListener('pointerup',off);b.addEventListener('pointerleave',off);b.addEventListener('pointercancel',off)});
+resize();draw();
+})();
+</script>
+</body></html>
