@@ -119,11 +119,23 @@ function moveEntity(e,dx,dy){if(!blocked(e.x+dx,e.y,e.r))e.x+=dx;if(!blocked(e.x
 // В лабиринте каждое нажатие перемещает игрока ровно в центр соседней клетки.
 function stepPlayer(dir){
  if(!running||paused||!player||level>3||!maze)return;
- const dirs={w:[0,-1],a:[-1,0],s:[0,1],d:[1,0]};
+ // Check the maze edge itself, not only the destination point:
+ // otherwise the player can jump across a wall between cell centers.
+ const dirs={w:{dx:0,dy:-1,wall:0},d:{dx:1,dy:0,wall:1},s:{dx:0,dy:1,wall:2},a:{dx:-1,dy:0,wall:3}};
  const v=dirs[dir];if(!v)return;
- player.face={x:v[0],y:v[1]};
- const nx=player.x+v[0]*cell,ny=player.y+v[1]*cell;
- if(!blocked(nx,ny,player.r)){player.x=maze.ox+(Math.round((nx-maze.ox)/cell-.5)+.5)*cell;player.y=maze.oy+(Math.round((ny-maze.oy)/cell-.5)+.5)*cell;}
+ player.face={x:v.dx,y:v.dy};
+ const x=Math.round((player.x-maze.ox)/cell-.5);
+ const y=Math.round((player.y-maze.oy)/cell-.5);
+ if(x<0||x>=mazeCols||y<0||y>=mazeRows)return;
+ const nextX=x+v.dx,nextY=y+v.dy;
+ if(nextX<0||nextX>=mazeCols||nextY<0||nextY>=mazeRows)return;
+ // A value of 1 means this side of the current cell is a wall.
+ if(maze.grid[y][x].w[v.wall]!==0)return;
+ const target=cellCenter(nextX,nextY);
+ if(!blocked(target.x,target.y,player.r)){
+  player.x=target.x;
+  player.y=target.y;
+ }
 }
 
 function shoot(){if(!running||paused||!player)return;tone(620,.08,'sawtooth',.035);shots.push({x:player.x+player.face.x*(player.r+4),y:player.y+player.face.y*(player.r+4),vx:player.face.x*330,vy:player.face.y*330,r:4,life:1.5,from:'player'})}
