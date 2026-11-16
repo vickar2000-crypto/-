@@ -29,6 +29,9 @@ button.danger{border-color:var(--pink);color:#ffb8f1}
 .pad button,.fire{padding:0;opacity:.85;touch-action:none}
 .fire{align-self:end;border-color:var(--pink);color:#ff9fe9;pointer-events:auto;width:62px;height:62px;border-radius:50%}
 @media(max-width:700px){#wrap{padding:5px;gap:5px}#touch{display:flex}#bottom .help{display:none}}
+
+#version-date{position:fixed;right:12px;bottom:8px;z-index:1000;padding:5px 9px;border:1px solid #55f7ff55;border-radius:7px;background:#050713c9;color:#8faac8;font-size:10px;letter-spacing:.04em;pointer-events:none;user-select:none;text-shadow:0 0 8px #55f7ff44}
+@media(max-width:700px){#version-date{right:7px;bottom:6px;font-size:9px;padding:4px 7px}}
 </style>
 </head>
 <body>
@@ -234,4 +237,5 @@ document.querySelectorAll('[data-key]').forEach(b=>{const k=b.dataset.key;const 
 resize();draw();
 })();
 </script>
+<div id="version-date" aria-label="Дата версии игры">Версия игры: 16.11.2026</div>
 </body></html>
