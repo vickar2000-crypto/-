@@ -19,16 +19,16 @@ function layoutMaze(g=maze,remap=true){
  const old={cell,ox,oy};
  const moveToCell=o=>{
   if(!o||!old.cell)return;
-  const sc=cl(Math.floor((o.x-old.ox)/old.cell),0,cols*2-1);
-  const sr=cl(Math.floor((o.y-old.oy)/old.cell),0,rows*2-1);
+  const sc=cl(Math.floor((o.x-old.ox)/old.cell),0,cols-1);
+  const sr=cl(Math.floor((o.y-old.oy)/old.cell),0,rows-1);
   o.x=ox+(sc+.5)*cell;o.y=oy+(sr+.5)*cell;
  };
- // cell — размер одного шага и одной видимой квадратной клетки.
- cell=Math.max(1,Math.floor(Math.min((W-24)/(cols*2),(H-24)/(rows*2),34)));
- ox=Math.floor((W-cols*2*cell)/2);oy=Math.floor((H-rows*2*cell)/2);
+ // Единый масштаб 1:1: шаг игрока = клетка фона = ширина прохода.
+ cell=Math.max(1,Math.floor(Math.min((W-24)/cols,(H-24)/rows,34)));
+ ox=Math.floor((W-cols*cell)/2);oy=Math.floor((H-rows*cell)/2);
  if(remap){moveToCell(p);moveToCell(exit);moveToCell(orb);for(const e of en)moveToCell(e);for(const h of haz)moveToCell(h)}
  walls=[];
- const tile=cell*2;
+ const tile=cell;
  for(let y=0;y<rows;y++)for(let a=0;a<cols;a++){
   const q=g[y][a],xx=ox+a*tile,yy=oy+y*tile;
   if(q.w[0])walls.push({x:xx,y:yy,w:tile,h:2});
@@ -52,12 +52,12 @@ function mazeGen(){
  }
  layoutMaze(g,false);return g;
 }
-function center(a,b){return{x:ox+(a*2+1)*cell,y:oy+(b*2+1)*cell}}function cells(){return Array.from({length:cols*rows},(_,i)=>center(i%cols,Math.floor(i/cols)))}
-function make(){en=[];shots=[];haz=[];boss=null;orb=null;if(lv<4){maze=mazeGen();p={x:ox+cell*.5,y:oy+cell*.5,r:cell*.22,face:{x:1,y:0}};exit={...center(cols-1,rows-1),r:cell*.35};let avail=cells().filter(q=>Math.hypot(q.x-p.x,q.y-p.y)>cell*3&&Math.hypot(q.x-exit.x,q.y-exit.y)>cell*2);for(let i=0;i<5;i++){let q=P(avail);en.push({...q,r:cell*.22,hp:1+Math.floor((lv-1)/2),speed:R(24,43)+lv*5,dx:R(-1,1),dy:R(-1,1),turn:R(.3,1.5)})}let q=P(avail);orb={...q,r:cell*.23};for(let i=0;i<lv+1;i++){q=P(avail);haz.push({...q,r:cell*.18,phase:R(0,6)})}}else{maze=null;walls=[];p={x:W*.22,y:H*.55,r:14,face:{x:1,y:0}};exit=null;boss={x:W*.72,y:H*.5,r:30,hp:22,max:22,shoot:1,phase:0};for(let i=0;i<4;i++)haz.push({x:R(W*.35,W*.85),y:R(H*.2,H*.8),r:8,phase:R(0,6)})}ui();msg=lv===4?'ФИНАЛ: ОДОЛЕЙ ВИРУС':'УРОВЕНЬ '+lv+': НАЙДИ УСИЛЕНИЕ';msgT=2.5}
+function center(a,b){return{x:ox+(a+.5)*cell,y:oy+(b+.5)*cell}}function cells(){return Array.from({length:cols*rows},(_,i)=>center(i%cols,Math.floor(i/cols)))}
+function make(){en=[];shots=[];haz=[];boss=null;orb=null;if(lv<4){maze=mazeGen();p={...center(0,0),r:cell*.22,face:{x:1,y:0}};exit={...center(cols-1,rows-1),r:cell*.35};let avail=cells().filter(q=>Math.hypot(q.x-p.x,q.y-p.y)>cell*3&&Math.hypot(q.x-exit.x,q.y-exit.y)>cell*2);for(let i=0;i<5;i++){let q=P(avail);en.push({...q,r:cell*.22,hp:1+Math.floor((lv-1)/2),speed:R(24,43)+lv*5,dx:R(-1,1),dy:R(-1,1),turn:R(.3,1.5)})}let q=P(avail);orb={...q,r:cell*.23};for(let i=0;i<lv+1;i++){q=P(avail);haz.push({...q,r:cell*.18,phase:R(0,6)})}}else{maze=null;walls=[];p={x:W*.22,y:H*.55,r:14,face:{x:1,y:0}};exit=null;boss={x:W*.72,y:H*.5,r:30,hp:22,max:22,shoot:1,phase:0};for(let i=0;i<4;i++)haz.push({x:R(W*.35,W*.85),y:R(H*.2,H*.8),r:8,phase:R(0,6)})}ui();msg=lv===4?'ФИНАЛ: ОДОЛЕЙ ВИРУС':'УРОВЕНЬ '+lv+': НАЙДИ УСИЛЕНИЕ';msgT=2.5}
 function cr(cx,cy,r,a){let xx=cl(cx,a.x,a.x+a.w),yy=cl(cy,a.y,a.y+a.h);return (cx-xx)**2+(cy-yy)**2<r*r}
 function block(a,b,r){
  if(lv<4&&maze){
-  const right=ox+cols*2*cell,bottom=oy+rows*2*cell,eps=.25;
+  const right=ox+cols*cell,bottom=oy+rows*cell,eps=.25;
   if(a-r<ox+eps||b-r<oy+eps||a+r>right-eps||b+r>bottom-eps)return true;
  }else if(a<r||b<r||a>W-r||b>H-r)return true;
  return walls.some(q=>cr(a,b,r,q))
@@ -66,26 +66,21 @@ function move(e,dx,dy){if(!block(e.x+dx,e.y,e.r))e.x+=dx;if(!block(e.x,e.y+dy,e.
 function stepPlayer(k){
  if(!run||pause||!p||lv>=4||!maze)return;
  const dirs={w:[-1,0],d:[0,1],s:[1,0],a:[0,-1]},v=dirs[k];if(!v)return;
- const [dr,dc]=v,unit=cell;
- const subCol=Math.round((p.x-ox)/unit-.5),subRow=Math.round((p.y-oy)/unit-.5);
- const nextSubCol=subCol+dc,nextSubRow=subRow+dr;
- const maxSubCol=cols*2-1,maxSubRow=rows*2-1;
- if(nextSubCol<0||nextSubCol>maxSubCol||nextSubRow<0||nextSubRow>maxSubRow)return;
- const col=Math.floor(subCol/2),row=Math.floor(subRow/2);
- const nextCol=Math.floor(nextSubCol/2),nextRow=Math.floor(nextSubRow/2);
- if(nextCol!==col||nextRow!==row){
-  const wall=dr<0?0:dc>0?1:dr>0?2:3;
-  if(maze[row][col].w[wall]!==0)return;
- }
+ const [dr,dc]=v;
+ const col=Math.floor((p.x-ox)/cell),row=Math.floor((p.y-oy)/cell);
+ const nc=col+dc,nr=row+dr;
+ if(col<0||col>=cols||row<0||row>=rows||nc<0||nc>=cols||nr<0||nr>=rows)return;
+ const wall=dr<0?0:dc>0?1:dr>0?2:3;
+ if(maze[row][col].w[wall]!==0)return;
  p.face={x:dc,y:dr};
- p.x=ox+(nextSubCol+.5)*unit;p.y=oy+(nextSubRow+.5)*unit;
+ p.x=ox+(nc+.5)*cell;p.y=oy+(nr+.5)*cell;
 }
 function fire(){if(!run||pause)return;beep(620,.07,'sawtooth');shots.push({x:p.x+p.face.x*(p.r+4),y:p.y+p.face.y*(p.r+4),vx:p.face.x*330,vy:p.face.y*330,r:4,life:1.5,from:'p'})}
 function hurt(){if(inv>0)return;lives--;inv=1.25;beep(100,.22,'sawtooth',.06);ui();if(lives<=0){run=false;clearTimeout(mt);panel('МИССИЯ ПРОВАЛЕНА','Вирус оказался сильнее. Лабиринт будет новым.', '<button class="primary" id="again">ПОВТОРИТЬ</button><button id="leave">ВЫЙТИ</button>');$('#again').onclick=start;$('#leave').onclick=menu}}
 function next(){lv++;make()}function win(){run=false;clearTimeout(mt);panel('ОРГАНИЗМ ОЧИЩЕН!','Вирус побеждён, его частицы исчезают, а тело снова наполняется светом!', '<button class="primary" id="again">ИГРАТЬ ЕЩЁ</button><button id="leave">В МЕНЮ</button>');$('#again').onclick=start;$('#leave').onclick=menu}
 function update(dt){t+=dt;inv-=dt;msgT-=dt;let dx=(keys.d?1:0)-(keys.a?1:0),dy=(keys.s?1:0)-(keys.w?1:0);if(lv===4&&(dx||dy)){let n=Math.hypot(dx,dy);dx/=n;dy/=n;p.face={x:dx,y:dy};move(p,dx*205*dt,dy*205*dt)}if(lv<4){for(let e of en){e.turn-=dt;if(e.turn<=0){e.dx=R(-1,1);e.dy=R(-1,1);e.turn=R(.3,1.4)}let n=Math.hypot(e.dx,e.dy)||1;move(e,e.dx/n*e.speed*dt,e.dy/n*e.speed*dt);if(Math.hypot(e.x-p.x,e.y-p.y)<e.r+p.r)hurt()}for(let h of haz){h.phase+=dt;if(Math.sin(h.phase)>0.92&&Math.hypot(h.x-p.x,h.y-p.y)<h.r+p.r)hurt()}if(orb&&Math.hypot(orb.x-p.x,orb.y-p.y)<orb.r+p.r){orb=null;boost=Math.min(3,boost+1);power++;beep(820,.15);msg='УСИЛЕНИЕ ПОЛУЧЕНО!';msgT=1.5;ui()}if(Math.hypot(exit.x-p.x,exit.y-p.y)<exit.r+p.r){if(!orb)next();else{msg='СНАЧАЛА НАЙДИ УСИЛЕНИЕ';msgT=1}}}else if(boss){boss.phase+=dt;boss.x=cl(boss.x+Math.cos(boss.phase)*25*dt,W*.42,W-40);boss.y=cl(boss.y+Math.sin(boss.phase*1.3)*45*dt,45,H-45);boss.shoot-=dt;if(boss.shoot<=0){boss.shoot=R(.65,1.1);let n=Math.random()<.5?1:5;for(let i=0;i<n;i++){let a=n===1?Math.atan2(p.y-boss.y,p.x-boss.x):R(0,Math.PI*2),s=R(90,150);shots.push({x:boss.x,y:boss.y,vx:Math.cos(a)*s,vy:Math.sin(a)*s,r:7,life:4.5,from:'b'})}}if(Math.hypot(boss.x-p.x,boss.y-p.y)<boss.r+p.r)hurt();for(let h of haz){h.phase+=dt;h.x+=Math.sin(h.phase)*12*dt;if(Math.hypot(h.x-p.x,h.y-p.y)<h.r+p.r)hurt()}}
 for(let i=shots.length-1;i>=0;i--){let s=shots[i];s.x+=s.vx*dt;s.y+=s.vy*dt;s.life-=dt;if(s.from==='b'){if(s.x<s.r||s.x>W-s.r)s.vx*=-1;if(s.y<s.r||s.y>H-s.r)s.vy*=-1;if(Math.hypot(s.x-p.x,s.y-p.y)<s.r+p.r){shots.splice(i,1);hurt();continue}}else{let hit=false;for(let j=en.length-1;j>=0;j--){let e=en[j];if(Math.hypot(s.x-e.x,s.y-e.y)<s.r+e.r){e.hp-=power;hit=true;if(e.hp<=0)en.splice(j,1);break}}if(boss&&Math.hypot(s.x-boss.x,s.y-boss.y)<s.r+boss.r){boss.hp-=power;hit=true;if(boss.hp<=0){boss=null;shots=shots.filter(z=>z.from!=='b');win();return}}if(hit||block(s.x,s.y,s.r)||s.life<=0||s.x<0||s.y<0||s.x>W||s.y>H)shots.splice(i,1);continue}if(s.life<=0)shots.splice(i,1)}}
-function draw(){x.clearRect(0,0,W,H);let g=x.createRadialGradient(W/2,H/2,2,W/2,H/2,Math.max(W,H)*.7);g.addColorStop(0,lv===4?'#173d42':'#111b38');g.addColorStop(1,'#050713');x.fillStyle=g;x.fillRect(0,0,W,H);x.save();x.globalAlpha=.15;x.strokeStyle='#55f7ff';if(lv<4&&maze){const unit=cell;for(let a=0;a<=cols*2;a++){let gx=ox+a*unit;x.beginPath();x.moveTo(gx,oy);x.lineTo(gx,oy+rows*2*cell);x.stroke()}for(let b=0;b<=rows*2;b++){let gy=oy+b*unit;x.beginPath();x.moveTo(ox,gy);x.lineTo(ox+cols*2*cell,gy);x.stroke()}}else{for(let a=0;a<W;a+=24){x.beginPath();x.moveTo(a,0);x.lineTo(a,H);x.stroke()}for(let b=0;b<H;b+=24){x.beginPath();x.moveTo(0,b);x.lineTo(W,b);x.stroke()}}x.restore();if(lv<4){x.shadowBlur=8;x.shadowColor='#55f7ff';x.fillStyle='#49dfff';for(let q of walls)x.fillRect(q.x,q.y,q.w,q.h);x.shadowBlur=18;x.strokeStyle='#b8ff5c';x.lineWidth=2;x.beginPath();x.arc(exit.x,exit.y,exit.r+Math.sin(t*5)*3,0,7);x.stroke();if(orb){x.save();x.translate(orb.x,orb.y);x.rotate(t*2);x.strokeStyle='#b8ff5c';x.beginPath();x.moveTo(0,-orb.r);x.lineTo(orb.r,0);x.lineTo(0,orb.r);x.lineTo(-orb.r,0);x.closePath();x.stroke();x.restore()}for(let h of haz){x.fillStyle=Math.sin(h.phase)>0.92?'#ff3b6b':'#a45b4a';x.beginPath();x.arc(h.x,h.y,h.r,0,7);x.fill()}for(let e of en){x.fillStyle='#ff3bd4';x.shadowColor='#ff3bd4';x.shadowBlur=13;x.beginPath();x.arc(e.x,e.y,e.r,0,7);x.fill()}}else{for(let h of haz){x.fillStyle='#ff9c3b';x.beginPath();x.arc(h.x,h.y,h.r,0,7);x.fill()}if(boss){x.fillStyle='#b51e54';x.shadowColor='#ff3b72';x.shadowBlur=24;x.beginPath();x.arc(boss.x,boss.y,boss.r,0,7);x.fill();x.shadowBlur=0;x.fillStyle='#381021';x.fillRect(W*.3,18,W*.4,10);x.fillStyle='#ff3b72';x.fillRect(W*.3,18,W*.4*cl(boss.hp/boss.max,0,1),10);x.fillStyle='#fff';x.textAlign='center';x.fillText('ВИРУС',W/2,14)}}for(let s of shots){x.fillStyle=s.from==='b'?'#ff3b72':'#dfffff';x.shadowColor=s.from==='b'?'#ff3b72':'#55f7ff';x.shadowBlur=12;x.beginPath();x.arc(s.x,s.y,s.r,0,7);x.fill()}x.shadowBlur=inv>0?20:16;x.shadowColor='#55f7ff';x.fillStyle=inv>0?'white':'#55f7ff';x.beginPath();x.arc(p.x,p.y,p.r,0,7);x.fill();x.shadowBlur=0;x.fillStyle='#05222a';x.beginPath();x.arc(p.x+p.face.x*p.r*.3,p.y+p.face.y*p.r*.3,p.r*.25,0,7);x.fill();if(msgT>0){x.fillStyle='#eaffff';x.font='bold 15px system-ui';x.textAlign='center';x.shadowColor='#55f7ff';x.shadowBlur=10;x.fillText(msg,W/2,H*.12)}x.shadowBlur=0}
+function draw(){x.clearRect(0,0,W,H);let g=x.createRadialGradient(W/2,H/2,2,W/2,H/2,Math.max(W,H)*.7);g.addColorStop(0,lv===4?'#173d42':'#111b38');g.addColorStop(1,'#050713');x.fillStyle=g;x.fillRect(0,0,W,H);x.save();x.globalAlpha=.15;x.strokeStyle='#55f7ff';if(lv<4&&maze){const unit=cell;for(let a=0;a<=cols;a++){let gx=ox+a*unit;x.beginPath();x.moveTo(gx,oy);x.lineTo(gx,oy+rows*cell);x.stroke()}for(let b=0;b<=rows;b++){let gy=oy+b*unit;x.beginPath();x.moveTo(ox,gy);x.lineTo(ox+cols*cell,gy);x.stroke()}}else{for(let a=0;a<W;a+=24){x.beginPath();x.moveTo(a,0);x.lineTo(a,H);x.stroke()}for(let b=0;b<H;b+=24){x.beginPath();x.moveTo(0,b);x.lineTo(W,b);x.stroke()}}x.restore();if(lv<4){x.shadowBlur=8;x.shadowColor='#55f7ff';x.fillStyle='#49dfff';for(let q of walls)x.fillRect(q.x,q.y,q.w,q.h);x.shadowBlur=18;x.strokeStyle='#b8ff5c';x.lineWidth=2;x.beginPath();x.arc(exit.x,exit.y,exit.r+Math.sin(t*5)*3,0,7);x.stroke();if(orb){x.save();x.translate(orb.x,orb.y);x.rotate(t*2);x.strokeStyle='#b8ff5c';x.beginPath();x.moveTo(0,-orb.r);x.lineTo(orb.r,0);x.lineTo(0,orb.r);x.lineTo(-orb.r,0);x.closePath();x.stroke();x.restore()}for(let h of haz){x.fillStyle=Math.sin(h.phase)>0.92?'#ff3b6b':'#a45b4a';x.beginPath();x.arc(h.x,h.y,h.r,0,7);x.fill()}for(let e of en){x.fillStyle='#ff3bd4';x.shadowColor='#ff3bd4';x.shadowBlur=13;x.beginPath();x.arc(e.x,e.y,e.r,0,7);x.fill()}}else{for(let h of haz){x.fillStyle='#ff9c3b';x.beginPath();x.arc(h.x,h.y,h.r,0,7);x.fill()}if(boss){x.fillStyle='#b51e54';x.shadowColor='#ff3b72';x.shadowBlur=24;x.beginPath();x.arc(boss.x,boss.y,boss.r,0,7);x.fill();x.shadowBlur=0;x.fillStyle='#381021';x.fillRect(W*.3,18,W*.4,10);x.fillStyle='#ff3b72';x.fillRect(W*.3,18,W*.4*cl(boss.hp/boss.max,0,1),10);x.fillStyle='#fff';x.textAlign='center';x.fillText('ВИРУС',W/2,14)}}for(let s of shots){x.fillStyle=s.from==='b'?'#ff3b72':'#dfffff';x.shadowColor=s.from==='b'?'#ff3b72':'#55f7ff';x.shadowBlur=12;x.beginPath();x.arc(s.x,s.y,s.r,0,7);x.fill()}x.shadowBlur=inv>0?20:16;x.shadowColor='#55f7ff';x.fillStyle=inv>0?'white':'#55f7ff';x.beginPath();x.arc(p.x,p.y,p.r,0,7);x.fill();x.shadowBlur=0;x.fillStyle='#05222a';x.beginPath();x.arc(p.x+p.face.x*p.r*.3,p.y+p.face.y*p.r*.3,p.r*.25,0,7);x.fill();if(msgT>0){x.fillStyle='#eaffff';x.font='bold 15px system-ui';x.textAlign='center';x.shadowColor='#55f7ff';x.shadowBlur=10;x.fillText(msg,W/2,H*.12)}x.shadowBlur=0}
 function loop(now){if(!run)return;let dt=Math.min((now-last)/1000,.04);last=now;if(!pause){update(dt);draw()}requestAnimationFrame(loop)}
 function exitConfirm(){panel('ВЕРНУТЬСЯ В МЕНЮ?','Текущий прогресс будет потерян. Ты уверен?', '<button class="primary" id="yes">ДА, ВЫЙТИ</button><button id="no">ОСТАТЬСЯ</button>');$('#yes').onclick=menu;$('#no').onclick=()=>{pause=true;$('#pause').textContent='▶ ПРОДОЛЖИТЬ'}}
 function toggle(){if(!run)return;pause=!pause;$('#pause').textContent=pause?'▶ ПРОДОЛЖИТЬ':'Ⅱ ПАУЗА';if(pause){clearTimeout(mt);panel('ПАУЗА','Игра приостановлена.', '<button class="primary" id="resume">ПРОДОЛЖИТЬ</button><button id="exit">В МЕНЮ</button>');$('#resume').onclick=()=>{pause=false;ov.style.display='none';last=performance.now();music()};$('#exit').onclick=exitConfirm}else{ov.style.display='none';last=performance.now();music()}}
