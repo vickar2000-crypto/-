@@ -8,13 +8,49 @@
 const R=(a,b)=>Math.random()*(b-a)+a,P=a=>a[Math.floor(Math.random()*a.length)],cl=(v,a,b)=>Math.max(a,Math.min(b,v));
 function beep(f=440,d=.1,type='sine',vol=.035){if(!sound)return;try{ac??=new(window.AudioContext||window.webkitAudioContext)();ac.resume();let o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.value=f;g.gain.setValueAtTime(vol,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+d);o.connect(g);g.connect(ac.destination);o.start();o.stop(ac.currentTime+d)}catch{}}
 function music(){if(!run||pause||!sound)return;beep([196,247,294,370][Math.floor(t*2)%4],.22,'triangle',.009);mt=setTimeout(music,500)}
-function resize(){let r=c.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);c.width=r.width*d;c.height=r.height*d;x.setTransform(d,0,0,d,0,0);W=r.width;H=r.height;if(p)draw()}addEventListener('resize',resize);
+function resize(){let r=c.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);c.width=r.width*d;c.height=r.height*d;x.setTransform(d,0,0,d,0,0);W=r.width;H=r.height;if(maze&&lv<4)layoutMaze(maze,true);if(p)draw()}addEventListener('resize',resize);
 function ui(){$('#lev').textContent='Уровень '+lv+'/4';$('#life').textContent='Жизни: '+('♥ '.repeat(lives)||'—');$('#up').textContent='Усиления: '+boost+'/3'}
 function panel(title,body,buttons){ov.style.display='grid';ov.innerHTML='<div class="panel"><h2>'+title+'</h2><p>'+body+'</p><div class="actions">'+buttons+'</div></div>'}
 function menu(){run=false;pause=false;clearTimeout(mt);ov.style.display='grid';ov.innerHTML='<div class="panel"><h1>ОДОЛЕЙ<br>ВИРУС</h1><p>Пройди случайные лабиринты, собери усиления и победи вируса.</p><div class="actions"><button class="primary" id="start">НАЧАТЬ ИГРУ</button><button id="how">КАК ИГРАТЬ</button></div><p class="muted">WASD — движение · Q — выстрел</p></div>';$('#start').onclick=start;$('#how').onclick=how}
 function how(){panel('КАК ИГРАТЬ','WASD — движение, Q — стрельба в сторону последнего движения. На каждом из трёх лабиринтных уровней коснись усиления и найди выход. Каждый лабиринт генерируется случайно и становится сложнее. В финальной арене уклоняйся от вирусных частиц. Урон наносят касание врагов, вражеские снаряды и опасные зоны.', '<button class="primary" id="back">ПОНЯТНО</button>');$('#back').onclick=menu}
 function start(){lv=1;lives=3;boost=0;power=1;t=0;run=true;pause=false;ov.style.display='none';$('#pause').textContent='Ⅱ ПАУЗА';make();last=performance.now();music();requestAnimationFrame(loop)}
-function mazeGen(){cols=lv===1?17:lv===2?21:25;rows=lv===1?11:lv===2?13:15;cell=Math.max(13,Math.min(34,(W-20)/cols,(H-20)/rows));ox=(W-cols*cell)/2;oy=(H-rows*cell)/2;let g=Array.from({length:rows},()=>Array.from({length:cols},()=>({v:0,w:[1,1,1,1]}))),ds=[[-1,0,0,2],[0,1,1,3],[1,0,2,0],[0,-1,3,1]],st=[[0,0]];g[0][0].v=1;while(st.length){let [y,a]=st[st.length-1],opts=ds.filter(([dy,dx])=>g[y+dy]?.[a+dx]&&!g[y+dy][a+dx].v);if(!opts.length){st.pop();continue}let[dy,dx,d,o]=P(opts);g[y][a].w[d]=0;g[y+dy][a+dx].w[o]=0;g[y+dy][a+dx].v=1;st.push([y+dy,a+dx])}for(let i=0;i<cols*rows*(.04+lv*.008);i++){let y=1+Math.floor(R(0,rows-2)),a=1+Math.floor(R(0,cols-2)),[dy,dx,d,o]=P(ds);if(g[y+dy]?.[a+dx]){g[y][a].w[d]=0;g[y+dy][a+dx].w[o]=0}}walls=[];for(let y=0;y<rows;y++)for(let a=0;a<cols;a++){let q=g[y][a],xx=ox+a*cell,yy=oy+y*cell;if(q.w[0])walls.push({x:xx,y:yy,w:cell,h:2});if(q.w[3])walls.push({x:xx,y:yy,w:2,h:cell});if(a===cols-1&&q.w[1])walls.push({x:xx+cell-2,y:yy,w:2,h:cell});if(y===rows-1&&q.w[2])walls.push({x:xx,y:yy+cell-2,w:cell,h:2})}return g}
+function layoutMaze(g=maze,remap=true){
+ if(!g)return;
+ const old={cell,ox,oy};
+ const moveToCell=o=>{
+  if(!o||!old.cell)return;
+  const col=cl(Math.floor((o.x-old.ox)/old.cell),0,cols-1);
+  const row=cl(Math.floor((o.y-old.oy)/old.cell),0,rows-1);
+  o.x=ox+(col+.5)*cell;o.y=oy+(row+.5)*cell;
+ };
+ // Квадратные целочисленные клетки: одна клетка карты всегда равна одному шагу.
+ cell=Math.max(1,Math.floor(Math.min((W-24)/cols,(H-24)/rows,34)));
+ ox=Math.floor((W-cols*cell)/2);oy=Math.floor((H-rows*cell)/2);
+ if(remap){moveToCell(p);moveToCell(exit);moveToCell(orb);for(const e of en)moveToCell(e);for(const h of haz)moveToCell(h)}
+ walls=[];
+ for(let y=0;y<rows;y++)for(let a=0;a<cols;a++){
+  const q=g[y][a],xx=ox+a*cell,yy=oy+y*cell;
+  if(q.w[0])walls.push({x:xx,y:yy,w:cell,h:2});
+  if(q.w[3])walls.push({x:xx,y:yy,w:2,h:cell});
+  if(a===cols-1&&q.w[1])walls.push({x:xx+cell-2,y:yy,w:2,h:cell});
+  if(y===rows-1&&q.w[2])walls.push({x:xx,y:yy+cell-2,w:cell,h:2});
+ }
+}
+function mazeGen(){
+ cols=lv===1?17:lv===2?21:25;rows=lv===1?11:lv===2?13:15;
+ let g=Array.from({length:rows},()=>Array.from({length:cols},()=>({v:0,w:[1,1,1,1]}))),ds=[[-1,0,0,2],[0,1,1,3],[1,0,2,0],[0,-1,3,1]],st=[[0,0]];
+ g[0][0].v=1;
+ while(st.length){
+  let [y,a]=st[st.length-1],opts=ds.filter(([dy,dx])=>g[y+dy]?.[a+dx]&&!g[y+dy][a+dx].v);
+  if(!opts.length){st.pop();continue}
+  let[dy,dx,d,o]=P(opts);g[y][a].w[d]=0;g[y+dy][a+dx].w[o]=0;g[y+dy][a+dx].v=1;st.push([y+dy,a+dx]);
+ }
+ for(let i=0;i<cols*rows*(.04+lv*.008);i++){
+  let y=1+Math.floor(R(0,rows-2)),a=1+Math.floor(R(0,cols-2)),[dy,dx,d,o]=P(ds);
+  if(g[y+dy]?.[a+dx]){g[y][a].w[d]=0;g[y+dy][a+dx].w[o]=0}
+ }
+ layoutMaze(g,false);return g;
+}
 function center(a,b){return{x:ox+(a+.5)*cell,y:oy+(b+.5)*cell}}function cells(){return Array.from({length:cols*rows},(_,i)=>center(i%cols,Math.floor(i/cols)))}
 function make(){en=[];shots=[];haz=[];boss=null;orb=null;if(lv<4){maze=mazeGen();p={...center(0,0),r:cell*.23,face:{x:1,y:0}};exit={...center(cols-1,rows-1),r:cell*.35};let avail=cells().filter(q=>Math.hypot(q.x-p.x,q.y-p.y)>cell*3&&Math.hypot(q.x-exit.x,q.y-exit.y)>cell*2);for(let i=0;i<5;i++){let q=P(avail);en.push({...q,r:cell*.22,hp:1+Math.floor((lv-1)/2),speed:R(24,43)+lv*5,dx:R(-1,1),dy:R(-1,1),turn:R(.3,1.5)})}let q=P(avail);orb={...q,r:cell*.23};for(let i=0;i<lv+1;i++){q=P(avail);haz.push({...q,r:cell*.18,phase:R(0,6)})}}else{maze=null;walls=[];p={x:W*.22,y:H*.55,r:14,face:{x:1,y:0}};exit=null;boss={x:W*.72,y:H*.5,r:30,hp:22,max:22,shoot:1,phase:0};for(let i=0;i<4;i++)haz.push({x:R(W*.35,W*.85),y:R(H*.2,H*.8),r:8,phase:R(0,6)})}ui();msg=lv===4?'ФИНАЛ: ОДОЛЕЙ ВИРУС':'УРОВЕНЬ '+lv+': НАЙДИ УСИЛЕНИЕ';msgT=2.5}
 function cr(cx,cy,r,a){let xx=cl(cx,a.x,a.x+a.w),yy=cl(cy,a.y,a.y+a.h);return (cx-xx)**2+(cy-yy)**2<r*r}
