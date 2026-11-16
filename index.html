@@ -57,7 +57,7 @@ function make(){en=[];shots=[];haz=[];boss=null;orb=null;if(lv<4){maze=mazeGen()
 function cr(cx,cy,r,a){let xx=cl(cx,a.x,a.x+a.w),yy=cl(cy,a.y,a.y+a.h);return (cx-xx)**2+(cy-yy)**2<r*r}
 function block(a,b,r){
  if(lv<4&&maze){
-  const right=ox+cols*cell,bottom=oy+rows*cell,eps=.25;
+  const right=ox+cols*2*cell,bottom=oy+rows*2*cell,eps=.25;
   if(a-r<ox+eps||b-r<oy+eps||a+r>right-eps||b+r>bottom-eps)return true;
  }else if(a<r||b<r||a>W-r||b>H-r)return true;
  return walls.some(q=>cr(a,b,r,q))
