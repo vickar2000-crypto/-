@@ -27,13 +27,16 @@ function block(a,b,r){
 }
 function move(e,dx,dy){if(!block(e.x+dx,e.y,e.r))e.x+=dx;if(!block(e.x,e.y+dy,e.r))e.y+=dy}
 function stepPlayer(k){
- if(!run||pause||!p||lv>=4)return;
- const dirs={w:[0,-1],a:[-1,0],s:[0,1],d:[1,0]},v=dirs[k];if(!v)return;
- p.face={x:v[0],y:v[1]};
- const tx=p.x+v[0]*cell,ty=p.y+v[1]*cell;
- let ok=true,dist=Math.hypot(tx-p.x,ty-p.y),steps=Math.ceil(dist/1.5);
- for(let i=1;i<=steps;i++){const f=i/steps;if(block(p.x+(tx-p.x)*f,p.y+(ty-p.y)*f,p.r)){ok=false;break}}
- if(ok){p.x=tx;p.y=ty}
+ if(!run||pause||!p||lv>=4||!maze)return;
+ const dirs={w:[-1,0,0],d:[0,1,1],s:[1,0,2],a:[0,-1,3]},v=dirs[k];if(!v)return;
+ const [dr,dc,wall]=v,row=Math.round((p.y-oy)/cell-.5),col=Math.round((p.x-ox)/cell-.5);
+ p.face={x:dc,y:dr};
+ const nr=row+dr,nc=col+dc;
+ if(row<0||row>=rows||col<0||col>=cols||nr<0||nr>=rows||nc<0||nc>=cols)return;
+ // Переход разрешён только через открытую сторону клетки в карте лабиринта.
+ if(maze[row][col].w[wall]!==0)return;
+ p.x=ox+(nc+.5)*cell;
+ p.y=oy+(nr+.5)*cell;
 }
 function fire(){if(!run||pause)return;beep(620,.07,'sawtooth');shots.push({x:p.x+p.face.x*(p.r+4),y:p.y+p.face.y*(p.r+4),vx:p.face.x*330,vy:p.face.y*330,r:4,life:1.5,from:'p'})}
 function hurt(){if(inv>0)return;lives--;inv=1.25;beep(100,.22,'sawtooth',.06);ui();if(lives<=0){run=false;clearTimeout(mt);panel('МИССИЯ ПРОВАЛЕНА','Вирус оказался сильнее. Лабиринт будет новым.', '<button class="primary" id="again">ПОВТОРИТЬ</button><button id="leave">ВЫЙТИ</button>');$('#again').onclick=start;$('#leave').onclick=menu}}
